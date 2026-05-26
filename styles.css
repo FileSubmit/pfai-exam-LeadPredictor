@@ -3,6 +3,8 @@
 }
 
 :root {
+  color-scheme: dark;
+
   --bg: #0d0f13;
   --bg-elev: #14171d;
   --card: #16191f;
@@ -19,8 +21,36 @@
   --bar-leads: #7c8ba6;
   --bar-customers: #d4dae5;
 
+  --tooltip-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --row-highlight: rgba(255, 255, 255, 0.03);
+
   --radius: 10px;
   --radius-sm: 6px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f6f7f9;
+  --bg-elev: #ffffff;
+  --card: #ffffff;
+  --card-2: #f0f2f5;
+  --card-hover: #fafbfc;
+  --border: #e3e6eb;
+  --border-strong: #c8cdd5;
+  --text: #15181f;
+  --text-muted: #5b606b;
+  --text-dim: #8b919c;
+  --accent: #2d3340;
+
+  --bar-prospects: #d8dde5;
+  --bar-leads: #7c8ba6;
+  --bar-customers: #2d3340;
+
+  --tooltip-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  --thumb-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  --row-highlight: rgba(15, 23, 42, 0.035);
 }
 
 html, body {
@@ -138,9 +168,6 @@ select:focus {
   background: var(--card-2);
 }
 
-input[type="date"] {
-  color-scheme: dark;
-}
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -200,7 +227,6 @@ select {
 
 .input-with-prefix:focus-within {
   border-color: var(--accent);
-  background: var(--card-2);
 }
 
 .input-with-prefix .prefix {
@@ -209,7 +235,7 @@ select {
   padding: 0 11px;
   color: var(--text-muted);
   font-size: 13px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--card-2);
   border-right: 1px solid var(--border);
   pointer-events: none;
   font-variant-numeric: tabular-nums;
@@ -234,6 +260,53 @@ select {
 
 .input-with-prefix input:focus {
   background: transparent;
+}
+
+/* ============ Theme toggle ============ */
+.theme-toggle {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.theme-option {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  font: inherit;
+}
+
+.theme-option svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.theme-option:hover {
+  color: var(--text);
+}
+
+.theme-option.active {
+  background: var(--card-2);
+  color: var(--text);
+}
+
+.theme-option:focus-visible {
+  outline: 1px solid var(--border-strong);
+  outline-offset: 1px;
 }
 
 /* ============ Main ============ */
@@ -272,7 +345,7 @@ select {
 }
 
 .chart .hover-row.active {
-  fill: rgba(255, 255, 255, 0.025);
+  fill: var(--row-highlight);
 }
 
 .y-axis-label {
@@ -300,7 +373,7 @@ select {
   opacity: 0;
   transform: translateY(2px);
   transition: opacity 0.12s ease, transform 0.12s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--tooltip-shadow);
   z-index: 10;
   line-height: 1.55;
   font-variant-numeric: tabular-nums;
@@ -448,7 +521,7 @@ input[type="range"]::-webkit-slider-thumb {
   border: 3px solid var(--card);
   margin-top: -6px;
   cursor: grab;
-  box-shadow: 0 0 0 1px var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border-strong), var(--thumb-shadow);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
@@ -459,7 +532,7 @@ input[type="range"]::-moz-range-thumb {
   background: var(--text);
   border: 3px solid var(--card);
   cursor: grab;
-  box-shadow: 0 0 0 1px var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border-strong), var(--thumb-shadow);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
@@ -520,10 +593,10 @@ input[type="range"]:active::-webkit-slider-thumb {
 
 .stat-percent {
   font-size: 11px;
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   padding: 2px 6px;
-  background: var(--bg-elev);
+  background: var(--card-2);
   border: 1px solid var(--border);
   border-radius: 4px;
 }
