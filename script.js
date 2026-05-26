@@ -131,11 +131,16 @@ const els = {
   tooltip: document.getElementById("tooltip"),
 };
 
-const BAR_COLORS = {
-  prospects: "#4a5365",
-  leads: "#7c8ba6",
-  customers: "#d4dae5",
-};
+function readChartColors() {
+  const s = getComputedStyle(document.documentElement);
+  return {
+    prospects: s.getPropertyValue("--bar-prospects").trim(),
+    leads: s.getPropertyValue("--bar-leads").trim(),
+    customers: s.getPropertyValue("--bar-customers").trim(),
+    grid: s.getPropertyValue("--border").trim(),
+    axis: s.getPropertyValue("--text-dim").trim(),
+  };
+}
 
 function getCurrencySymbol() {
   const opt = els.currency.options[els.currency.selectedIndex];
@@ -274,6 +279,8 @@ function renderChart(data, maxProspects, animate) {
   cancelChartAnimation();
   svg.innerHTML = "";
 
+  const colors = readChartColors();
+
   const rect = svg.getBoundingClientRect();
   const W = rect.width;
   const H = rect.height;
@@ -298,7 +305,7 @@ function renderChart(data, maxProspects, animate) {
     line.setAttribute("x2", x);
     line.setAttribute("y1", margin.top);
     line.setAttribute("y2", margin.top + innerH);
-    line.setAttribute("stroke", "#232831");
+    line.setAttribute("stroke", colors.grid);
     line.setAttribute("stroke-width", "1");
     line.setAttribute("opacity", tick === 0 ? "1" : "0.55");
     svg.appendChild(line);
@@ -306,7 +313,7 @@ function renderChart(data, maxProspects, animate) {
     const label = document.createElementNS(SVG_NS, "text");
     label.setAttribute("x", x);
     label.setAttribute("y", margin.top + innerH + 22);
-    label.setAttribute("fill", "#5b606b");
+    label.setAttribute("fill", colors.axis);
     label.setAttribute("font-size", "10");
     label.setAttribute("text-anchor", "middle");
     label.setAttribute("font-family", "inherit");
@@ -341,7 +348,7 @@ function renderChart(data, maxProspects, animate) {
       bar.setAttribute("y", y);
       bar.setAttribute("width", animate ? 0 : targetW);
       bar.setAttribute("height", barHeight);
-      bar.setAttribute("fill", BAR_COLORS[layer.key]);
+      bar.setAttribute("fill", colors[layer.key]);
       bar.setAttribute("rx", "3");
       bar.setAttribute("class", "bar");
       svg.appendChild(bar);
@@ -355,7 +362,7 @@ function renderChart(data, maxProspects, animate) {
     const label = document.createElementNS(SVG_NS, "text");
     label.setAttribute("x", margin.left - 10);
     label.setAttribute("y", yCenter + 3);
-    label.setAttribute("fill", "#5b606b");
+    label.setAttribute("fill", colors.axis);
     label.setAttribute("font-size", "10");
     label.setAttribute("text-anchor", "end");
     label.setAttribute("font-family", "inherit");
@@ -388,22 +395,13 @@ function showTooltip(e, d) {
     `<div class="tooltip-title">${t("month")} ${d.month}</div>` +
     rows.map((r) =>
       `<div class="tooltip-row">` +
-        `<span class="dot" style="background: ${BAR_COLORS[r.key]}"></span>` +
+        `<span class="dot" style="background: var(--bar-${r.key})"></span>` +
         `<span class="label">${t(r.key)}</span>` +
         `<span class="value">${r.value.toLocaleString()}</span>` +
       `</div>`
     ).join("");
   els.tooltip.classList.add("visible");
 
-  const tooltipW = els.tooltip.offsetWidth;
-  const tooltipH = els.tooltip.offsetHeight;
-  const cursorX = e.clientX - containerRect.left;
-  const cursorY = e.clientY - containerRect.top;
-
-  let left = cursorX + 16;
-  if (left + tooltipW > containerRect.width - 4) {
-    left = cursorX - tooltipW - 16;
-  }
   let top = cursorY - tooltipH / 2;
   top = Math.max(4, Math.min(top, containerRect.height - tooltipH - 4));
 
@@ -489,6 +487,48 @@ window.addEventListener("resize", () => {
   resizeTimer = setTimeout(calculate, 80);
 });
 
+// Theme handling
+const THEME_KEY = "leadpredictor-theme";
+const systemThemeQuery = window.matchMedia("(prefers-color-scheme: light)");
+let themePref = localStorage.getItem(THEME_KEY) || "system";
+
+function effectiveTheme() {
+  if (themePref === "system") {
+    return systemThemeQuery.matches ? "light" : "dark";
+  }
+  return themePref;
+}
+
+function applyTheme(animate) {
+  document.documentElement.setAttribute("data-theme", effectiveTheme());
+  document.querySelectorAll(".theme-option").forEach((btn) => {
+    const active = btn.dataset.themeValue === themePref;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  if (animate) {
+    nextRenderAnimates = true;
+    calculate();
+  }
+}
+
+document.querySelectorAll(".theme-option").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    themePref = btn.dataset.themeValue;
+    if (themePref === "system") {
+      localStorage.removeItem(THEME_KEY);
+    } else {
+      localStorage.setItem(THEME_KEY, themePref);
+    }
+    applyTheme(true);
+  });
+});
+
+systemThemeQuery.addEventListener("change", () => {
+  if (themePref === "system") applyTheme(true);
+});
+
+applyTheme(false);
 applyTranslations();
 updateCurrencyPrefix();
 updateRangeFill(els.leadRate, els.leadRateFill);
