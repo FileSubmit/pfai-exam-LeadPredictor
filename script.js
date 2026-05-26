@@ -402,6 +402,15 @@ function showTooltip(e, d) {
     ).join("");
   els.tooltip.classList.add("visible");
 
+  const tooltipW = els.tooltip.offsetWidth;
+  const tooltipH = els.tooltip.offsetHeight;
+  const cursorX = e.clientX - containerRect.left;
+  const cursorY = e.clientY - containerRect.top;
+
+  let left = cursorX + 16;
+  if (left + tooltipW > containerRect.width - 4) {
+    left = cursorX - tooltipW - 16;
+  }
   let top = cursorY - tooltipH / 2;
   top = Math.max(4, Math.min(top, containerRect.height - tooltipH - 4));
 
