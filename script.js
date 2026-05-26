@@ -125,8 +125,16 @@ const els = {
   prospectsBar: document.getElementById("prospectsBar"),
   leadsBar: document.getElementById("leadsBar"),
   customersBar: document.getElementById("customersBar"),
+  leadRateFill: document.getElementById("leadRateFill"),
+  prospectRateFill: document.getElementById("prospectRateFill"),
   chart: document.getElementById("chart"),
   tooltip: document.getElementById("tooltip"),
+};
+
+const BAR_COLORS = {
+  prospects: "#4a5365",
+  leads: "#7c8ba6",
+  customers: "#d4dae5",
 };
 
 function getCurrencySymbol() {
@@ -174,6 +182,8 @@ function niceTicks(maxValue) {
   return ticks;
 }
 
+let nextRenderAnimates = false;
+
 function calculate() {
   const totalRevenue = Math.max(0, parseFloat(els.totalRevenue.value) || 0);
   const aov = Math.max(0.0001, parseFloat(els.avgOrderValue.value) || 1);
@@ -215,18 +225,60 @@ function calculate() {
     });
   }
 
-  renderChart(monthData, prospects);
+  renderChart(monthData, prospects, nextRenderAnimates);
+  nextRenderAnimates = false;
 }
 
-function renderChart(data, maxProspects) {
+let chartAnimRaf = null;
+let chartAnimQueue = [];
+
+function cancelChartAnimation() {
+  if (chartAnimRaf !== null) {
+    cancelAnimationFrame(chartAnimRaf);
+    chartAnimRaf = null;
+  }
+  chartAnimQueue = [];
+}
+
+function runChartAnimation(duration) {
+  const startTime = performance.now();
+  const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
+
+  function frame(now) {
+    let active = false;
+    for (const a of chartAnimQueue) {
+      const elapsed = now - startTime - a.delay;
+      let p;
+      if (elapsed <= 0) {
+        p = 0;
+        active = true;
+      } else if (elapsed >= duration) {
+        p = 1;
+      } else {
+        p = easeOutQuart(elapsed / duration);
+        active = true;
+      }
+      a.bar.setAttribute("width", a.target * p);
+    }
+    if (active) {
+      chartAnimRaf = requestAnimationFrame(frame);
+    } else {
+      chartAnimRaf = null;
+    }
+  }
+  chartAnimRaf = requestAnimationFrame(frame);
+}
+
+function renderChart(data, maxProspects, animate) {
   const svg = els.chart;
+  cancelChartAnimation();
   svg.innerHTML = "";
 
   const rect = svg.getBoundingClientRect();
   const W = rect.width;
   const H = rect.height;
 
-  const margin = { top: 10, right: 30, bottom: 36, left: 36 };
+  const margin = { top: 12, right: 36, bottom: 38, left: 42 };
   const innerW = W - margin.left - margin.right;
   const innerH = H - margin.top - margin.bottom;
 
@@ -236,7 +288,7 @@ function renderChart(data, maxProspects) {
 
   const rows = data.length;
   const rowHeight = innerH / rows;
-  const barHeight = Math.min(34, rowHeight * 0.7);
+  const barHeight = Math.min(28, rowHeight * 0.62);
 
   // Gridlines + x-axis labels
   for (const tick of ticks) {
@@ -246,86 +298,129 @@ function renderChart(data, maxProspects) {
     line.setAttribute("x2", x);
     line.setAttribute("y1", margin.top);
     line.setAttribute("y2", margin.top + innerH);
-    line.setAttribute("stroke", "#3a4555");
+    line.setAttribute("stroke", "#232831");
     line.setAttribute("stroke-width", "1");
-    line.setAttribute("stroke-dasharray", tick === 0 ? "0" : "0");
-    line.setAttribute("opacity", tick === 0 ? "0.6" : "0.25");
+    line.setAttribute("opacity", tick === 0 ? "1" : "0.55");
     svg.appendChild(line);
 
     const label = document.createElementNS(SVG_NS, "text");
     label.setAttribute("x", x);
-    label.setAttribute("y", margin.top + innerH + 20);
-    label.setAttribute("fill", "#8b95a5");
+    label.setAttribute("y", margin.top + innerH + 22);
+    label.setAttribute("fill", "#5b606b");
     label.setAttribute("font-size", "10");
     label.setAttribute("text-anchor", "middle");
+    label.setAttribute("font-family", "inherit");
     label.textContent = `${tick} ${t("people")}`;
     svg.appendChild(label);
   }
 
-  // Bars per month (overlapping: prospects > leads > customers)
+  // Bars per month (largest first so smaller bars sit on top)
   data.forEach((d, i) => {
     const yCenter = margin.top + rowHeight * (i + 0.5);
     const y = yCenter - barHeight / 2;
 
-    const layers = [
-      { value: d.prospects, color: "var(--bar-prospects)", fill: "#b8c2d0" },
-      { value: d.leads, color: "var(--bar-leads)", fill: "#6f7a8d" },
-      { value: d.customers, color: "var(--bar-customers)", fill: "#475164" },
-    ];
-
-    layers.forEach((layer) => {
-      const w = Math.max(0, xScale(layer.value) - margin.left);
-      const bar = document.createElementNS(SVG_NS, "rect");
-      bar.setAttribute("x", margin.left);
-      bar.setAttribute("y", y);
-      bar.setAttribute("width", w);
-      bar.setAttribute("height", barHeight);
-      bar.setAttribute("fill", layer.fill);
-      bar.setAttribute("rx", "2");
-      svg.appendChild(bar);
-    });
-
-    // Y-axis label (month number)
-    const label = document.createElementNS(SVG_NS, "text");
-    label.setAttribute("x", margin.left - 8);
-    label.setAttribute("y", yCenter + 3);
-    label.setAttribute("fill", "#8b95a5");
-    label.setAttribute("font-size", "10");
-    label.setAttribute("text-anchor", "end");
-    label.textContent = d.month;
-    svg.appendChild(label);
-
-    // Invisible hover row
+    // Invisible hover row (added first so it sits under bars for hit testing via overlay)
     const hover = document.createElementNS(SVG_NS, "rect");
     hover.setAttribute("x", margin.left);
     hover.setAttribute("y", margin.top + rowHeight * i);
     hover.setAttribute("width", innerW);
     hover.setAttribute("height", rowHeight);
-    hover.setAttribute("fill", "transparent");
-    hover.style.cursor = "pointer";
-    hover.addEventListener("mousemove", (e) => showTooltip(e, d));
-    hover.addEventListener("mouseleave", hideTooltip);
+    hover.setAttribute("class", "hover-row");
     svg.appendChild(hover);
+
+    const layers = [
+      { key: "prospects", value: d.prospects },
+      { key: "leads", value: d.leads },
+      { key: "customers", value: d.customers },
+    ];
+
+    layers.forEach((layer) => {
+      const targetW = Math.max(0, xScale(layer.value) - margin.left);
+      const bar = document.createElementNS(SVG_NS, "rect");
+      bar.setAttribute("x", margin.left);
+      bar.setAttribute("y", y);
+      bar.setAttribute("width", animate ? 0 : targetW);
+      bar.setAttribute("height", barHeight);
+      bar.setAttribute("fill", BAR_COLORS[layer.key]);
+      bar.setAttribute("rx", "3");
+      bar.setAttribute("class", "bar");
+      svg.appendChild(bar);
+
+      if (animate) {
+        chartAnimQueue.push({ bar, target: targetW, delay: i * 35 });
+      }
+    });
+
+    // Y-axis label (month number)
+    const label = document.createElementNS(SVG_NS, "text");
+    label.setAttribute("x", margin.left - 10);
+    label.setAttribute("y", yCenter + 3);
+    label.setAttribute("fill", "#5b606b");
+    label.setAttribute("font-size", "10");
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("font-family", "inherit");
+    label.textContent = d.month;
+    svg.appendChild(label);
+
+    hover.addEventListener("mousemove", (e) => {
+      hover.classList.add("active");
+      showTooltip(e, d);
+    });
+    hover.addEventListener("mouseleave", () => {
+      hover.classList.remove("active");
+      hideTooltip();
+    });
   });
+
+  if (animate && chartAnimQueue.length) {
+    runChartAnimation(700);
+  }
 }
 
 function showTooltip(e, d) {
   const containerRect = els.chart.parentElement.getBoundingClientRect();
+  const rows = [
+    { key: "prospects", value: d.prospects },
+    { key: "leads", value: d.leads },
+    { key: "customers", value: d.customers },
+  ];
   els.tooltip.innerHTML =
-    `${t("month")} #${d.month}<br>` +
-    `${t("prospects")}: ${d.prospects}<br>` +
-    `${t("leads")}: ${d.leads}<br>` +
-    `${t("customers")}: ${d.customers}`;
+    `<div class="tooltip-title">${t("month")} ${d.month}</div>` +
+    rows.map((r) =>
+      `<div class="tooltip-row">` +
+        `<span class="dot" style="background: ${BAR_COLORS[r.key]}"></span>` +
+        `<span class="label">${t(r.key)}</span>` +
+        `<span class="value">${r.value.toLocaleString()}</span>` +
+      `</div>`
+    ).join("");
   els.tooltip.classList.add("visible");
 
-  const left = e.clientX - containerRect.left + 14;
-  const top = e.clientY - containerRect.top - els.tooltip.offsetHeight / 2;
+  const tooltipW = els.tooltip.offsetWidth;
+  const tooltipH = els.tooltip.offsetHeight;
+  const cursorX = e.clientX - containerRect.left;
+  const cursorY = e.clientY - containerRect.top;
+
+  let left = cursorX + 16;
+  if (left + tooltipW > containerRect.width - 4) {
+    left = cursorX - tooltipW - 16;
+  }
+  let top = cursorY - tooltipH / 2;
+  top = Math.max(4, Math.min(top, containerRect.height - tooltipH - 4));
+
   els.tooltip.style.left = left + "px";
   els.tooltip.style.top = top + "px";
 }
 
 function hideTooltip() {
   els.tooltip.classList.remove("visible");
+}
+
+function updateRangeFill(input, fill) {
+  const min = parseFloat(input.min) || 0;
+  const max = parseFloat(input.max) || 100;
+  const val = parseFloat(input.value);
+  const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+  fill.style.width = pct + "%";
 }
 
 function updateCurrencyPrefix() {
@@ -364,9 +459,17 @@ function applyTranslations() {
   els.avgOrderValue,
   els.campaignStart,
   els.campaignEnd,
-  els.leadRate,
-  els.prospectRate,
 ].forEach((el) => el.addEventListener("input", calculate));
+
+els.leadRate.addEventListener("input", () => {
+  updateRangeFill(els.leadRate, els.leadRateFill);
+  calculate();
+});
+
+els.prospectRate.addEventListener("input", () => {
+  updateRangeFill(els.prospectRate, els.prospectRateFill);
+  calculate();
+});
 
 els.currency.addEventListener("change", () => {
   updateCurrencyPrefix();
@@ -376,11 +479,19 @@ els.currency.addEventListener("change", () => {
 els.language.addEventListener("change", () => {
   currentLang = els.language.value || "en";
   applyTranslations();
+  nextRenderAnimates = true;
   calculate();
 });
 
-window.addEventListener("resize", calculate);
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(calculate, 80);
+});
 
 applyTranslations();
 updateCurrencyPrefix();
+updateRangeFill(els.leadRate, els.leadRateFill);
+updateRangeFill(els.prospectRate, els.prospectRateFill);
+nextRenderAnimates = true;
 calculate();
