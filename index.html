@@ -23,41 +23,41 @@
       </div>
 
       <div class="field">
-        <label for="language">Language</label>
+        <label for="language" data-i18n="language">Language</label>
         <div class="select-wrapper">
           <select id="language">
-            <option>🇺🇸 English</option>
-            <option>🇪🇸 Spanish</option>
-            <option>🇩🇪 German</option>
-            <option>🇫🇷 French</option>
+            <option value="en" data-flag="🇺🇸" data-i18n="english">English</option>
+            <option value="es" data-flag="🇪🇸" data-i18n="spanish">Spanish</option>
+            <option value="de" data-flag="🇩🇪" data-i18n="german">German</option>
+            <option value="fr" data-flag="🇫🇷" data-i18n="french">French</option>
           </select>
         </div>
       </div>
 
       <div class="field">
-        <label for="currency">Currency</label>
+        <label for="currency" data-i18n="currency">Currency</label>
         <div class="select-wrapper">
           <select id="currency">
-            <option data-symbol="$">$ US Dollar</option>
-            <option data-symbol="€">€ Euro</option>
-            <option data-symbol="£">£ British Pound</option>
-            <option data-symbol="¥">¥ Japanese Yen</option>
+            <option data-symbol="$" data-i18n="usDollar">US Dollar</option>
+            <option data-symbol="€" data-i18n="euro">Euro</option>
+            <option data-symbol="£" data-i18n="britishPound">British Pound</option>
+            <option data-symbol="¥" data-i18n="japaneseYen">Japanese Yen</option>
           </select>
         </div>
       </div>
 
       <div class="field">
-        <label for="campaignStart">Campaign Start</label>
+        <label for="campaignStart" data-i18n="campaignStart">Campaign Start</label>
         <input type="date" id="campaignStart" value="2026-05-08">
       </div>
 
       <div class="field">
-        <label for="campaignEnd">Campaign End</label>
+        <label for="campaignEnd" data-i18n="campaignEnd">Campaign End</label>
         <input type="date" id="campaignEnd" value="2026-11-04">
       </div>
 
       <div class="field">
-        <label for="totalRevenue">Total Revenue</label>
+        <label for="totalRevenue" data-i18n="totalRevenue">Total Revenue</label>
         <div class="input-with-prefix">
           <span class="prefix" data-prefix="$">$</span>
           <input type="number" id="totalRevenue" value="10000" min="0">
@@ -65,7 +65,7 @@
       </div>
 
       <div class="field">
-        <label for="avgOrderValue">Avg. Order Value</label>
+        <label for="avgOrderValue" data-i18n="avgOrderValue">Avg. Order Value</label>
         <div class="input-with-prefix">
           <span class="prefix" data-prefix="$">$</span>
           <input type="number" id="avgOrderValue" value="1000" min="0">
@@ -76,7 +76,7 @@
     <main class="main">
       <div class="chart-card">
         <div class="chart-container">
-          <div class="y-axis-label">Months</div>
+          <div class="y-axis-label" data-i18n="months">Months</div>
           <svg id="chart" class="chart"></svg>
           <div id="tooltip" class="tooltip"></div>
         </div>
@@ -84,14 +84,14 @@
 
       <div class="controls-card">
         <div class="slider-group">
-          <label for="leadRate">Lead Response Rate</label>
+          <label for="leadRate" data-i18n="leadRate">Lead Response Rate</label>
           <div class="slider-row">
             <input type="range" id="leadRate" min="1" max="100" step="0.01" value="40">
             <span class="rate-value" id="leadRateValue">40.00%</span>
           </div>
         </div>
         <div class="slider-group">
-          <label for="prospectRate">Prospect Response Rate</label>
+          <label for="prospectRate" data-i18n="prospectRate">Prospect Response Rate</label>
           <div class="slider-row">
             <input type="range" id="prospectRate" min="1" max="100" step="0.01" value="20">
             <span class="rate-value" id="prospectRateValue">20.00%</span>
@@ -106,7 +106,7 @@
           <svg class="stat-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
           </svg>
-          <span class="stat-label">Prospects</span>
+          <span class="stat-label" data-i18n="prospects">Prospects</span>
           <span class="stat-percent" id="prospectsPercent">100%</span>
         </div>
         <div class="stat-value" id="prospectsValue">125</div>
@@ -118,7 +118,7 @@
           <svg class="stat-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
           </svg>
-          <span class="stat-label">Leads</span>
+          <span class="stat-label" data-i18n="leads">Leads</span>
           <span class="stat-percent" id="leadsPercent">20%</span>
         </div>
         <div class="stat-value" id="leadsValue">25</div>
@@ -130,7 +130,7 @@
           <svg class="stat-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 2v6c0 2.21 1.79 4 4 4v2H8v2h8v-2h-2v-2c2.21 0 4-1.79 4-4V2H6zm10 6c0 1.1-.9 2-2 2h-4c-1.1 0-2-.9-2-2V4h8v4zM6 22h12v-2H6v2z"/>
           </svg>
-          <span class="stat-label">Customers</span>
+          <span class="stat-label" data-i18n="customers">Customers</span>
           <span class="stat-percent" id="customersPercent">8%</span>
         </div>
         <div class="stat-value" id="customersValue">10</div>
