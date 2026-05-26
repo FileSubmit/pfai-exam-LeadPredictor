@@ -1,5 +1,110 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+const translations = {
+  en: {
+    language: "Language",
+    currency: "Currency",
+    campaignStart: "Campaign Start",
+    campaignEnd: "Campaign End",
+    totalRevenue: "Total Revenue",
+    avgOrderValue: "Avg. Order Value",
+    leadRate: "Lead Response Rate",
+    prospectRate: "Prospect Response Rate",
+    months: "Months",
+    month: "Month",
+    prospects: "Prospects",
+    leads: "Leads",
+    customers: "Customers",
+    people: "people",
+    english: "English",
+    spanish: "Spanish",
+    german: "German",
+    french: "French",
+    usDollar: "US Dollar",
+    euro: "Euro",
+    britishPound: "British Pound",
+    japaneseYen: "Japanese Yen",
+  },
+  es: {
+    language: "Idioma",
+    currency: "Moneda",
+    campaignStart: "Inicio de campaña",
+    campaignEnd: "Fin de campaña",
+    totalRevenue: "Ingresos totales",
+    avgOrderValue: "Valor medio del pedido",
+    leadRate: "Tasa de respuesta de clientes potenciales",
+    prospectRate: "Tasa de respuesta de prospectos",
+    months: "Meses",
+    month: "Mes",
+    prospects: "Prospectos",
+    leads: "Clientes potenciales",
+    customers: "Clientes",
+    people: "personas",
+    english: "Inglés",
+    spanish: "Español",
+    german: "Alemán",
+    french: "Francés",
+    usDollar: "Dólar estadounidense",
+    euro: "Euro",
+    britishPound: "Libra esterlina",
+    japaneseYen: "Yen japonés",
+  },
+  de: {
+    language: "Sprache",
+    currency: "Währung",
+    campaignStart: "Kampagnenstart",
+    campaignEnd: "Kampagnenende",
+    totalRevenue: "Gesamtumsatz",
+    avgOrderValue: "Durchschn. Bestellwert",
+    leadRate: "Anfragen-Antwortrate",
+    prospectRate: "Interessenten-Antwortrate",
+    months: "Monate",
+    month: "Monat",
+    prospects: "Interessenten",
+    leads: "Anfragen",
+    customers: "Kunden",
+    people: "Personen",
+    english: "Englisch",
+    spanish: "Spanisch",
+    german: "Deutsch",
+    french: "Französisch",
+    usDollar: "US-Dollar",
+    euro: "Euro",
+    britishPound: "Britisches Pfund",
+    japaneseYen: "Japanischer Yen",
+  },
+  fr: {
+    language: "Langue",
+    currency: "Devise",
+    campaignStart: "Début de campagne",
+    campaignEnd: "Fin de campagne",
+    totalRevenue: "Revenu total",
+    avgOrderValue: "Valeur moy. de commande",
+    leadRate: "Taux de réponse des pistes",
+    prospectRate: "Taux de réponse des prospects",
+    months: "Mois",
+    month: "Mois",
+    prospects: "Prospects",
+    leads: "Pistes",
+    customers: "Clients",
+    people: "personnes",
+    english: "Anglais",
+    spanish: "Espagnol",
+    german: "Allemand",
+    french: "Français",
+    usDollar: "Dollar américain",
+    euro: "Euro",
+    britishPound: "Livre sterling",
+    japaneseYen: "Yen japonais",
+  },
+};
+
+let currentLang = "en";
+
+function t(key) {
+  return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+}
+
 const els = {
   language: document.getElementById("language"),
   currency: document.getElementById("currency"),
@@ -134,8 +239,8 @@ function renderChart(data, maxProspects) {
   const barHeight = Math.min(34, rowHeight * 0.7);
 
   // Gridlines + x-axis labels
-  for (const t of ticks) {
-    const x = xScale(t);
+  for (const tick of ticks) {
+    const x = xScale(tick);
     const line = document.createElementNS(SVG_NS, "line");
     line.setAttribute("x1", x);
     line.setAttribute("x2", x);
@@ -143,8 +248,8 @@ function renderChart(data, maxProspects) {
     line.setAttribute("y2", margin.top + innerH);
     line.setAttribute("stroke", "#3a4555");
     line.setAttribute("stroke-width", "1");
-    line.setAttribute("stroke-dasharray", t === 0 ? "0" : "0");
-    line.setAttribute("opacity", t === 0 ? "0.6" : "0.25");
+    line.setAttribute("stroke-dasharray", tick === 0 ? "0" : "0");
+    line.setAttribute("opacity", tick === 0 ? "0.6" : "0.25");
     svg.appendChild(line);
 
     const label = document.createElementNS(SVG_NS, "text");
@@ -153,7 +258,7 @@ function renderChart(data, maxProspects) {
     label.setAttribute("fill", "#8b95a5");
     label.setAttribute("font-size", "10");
     label.setAttribute("text-anchor", "middle");
-    label.textContent = `${t} people`;
+    label.textContent = `${tick} ${t("people")}`;
     svg.appendChild(label);
   }
 
@@ -207,10 +312,10 @@ function renderChart(data, maxProspects) {
 function showTooltip(e, d) {
   const containerRect = els.chart.parentElement.getBoundingClientRect();
   els.tooltip.innerHTML =
-    `Month #${d.month}<br>` +
-    `Prospects: ${d.prospects}<br>` +
-    `Leads: ${d.leads}<br>` +
-    `Customers: ${d.customers}`;
+    `${t("month")} #${d.month}<br>` +
+    `${t("prospects")}: ${d.prospects}<br>` +
+    `${t("leads")}: ${d.leads}<br>` +
+    `${t("customers")}: ${d.customers}`;
   els.tooltip.classList.add("visible");
 
   const left = e.clientX - containerRect.left + 14;
@@ -230,6 +335,29 @@ function updateCurrencyPrefix() {
   });
 }
 
+function applyTranslations() {
+  document.documentElement.lang = currentLang;
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    const translated = t(key);
+
+    if (el.tagName === "OPTION") {
+      const flag = el.getAttribute("data-flag");
+      const symbol = el.getAttribute("data-symbol");
+      if (flag) {
+        el.textContent = `${flag} ${translated}`;
+      } else if (symbol) {
+        el.textContent = `${symbol} ${translated}`;
+      } else {
+        el.textContent = translated;
+      }
+    } else {
+      el.textContent = translated;
+    }
+  });
+}
+
 // Wire up
 [
   els.totalRevenue,
@@ -245,7 +373,14 @@ els.currency.addEventListener("change", () => {
   calculate();
 });
 
+els.language.addEventListener("change", () => {
+  currentLang = els.language.value || "en";
+  applyTranslations();
+  calculate();
+});
+
 window.addEventListener("resize", calculate);
 
+applyTranslations();
 updateCurrencyPrefix();
 calculate();
