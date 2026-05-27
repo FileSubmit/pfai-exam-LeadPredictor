@@ -32,25 +32,25 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #fdf4e7;
+  --bg: #f6f7f9;
   --bg-elev: #ffffff;
   --card: #ffffff;
-  --card-2: #fbe7cb;
-  --card-hover: #fff1de;
-  --border: #f0d4a8;
-  --border-strong: #d99b53;
-  --text: #3a1f08;
-  --text-muted: #8a5320;
-  --text-dim: #b27939;
-  --accent: #b8400a;
+  --card-2: #f0f2f5;
+  --card-hover: #fafbfc;
+  --border: #e3e6eb;
+  --border-strong: #c8cdd5;
+  --text: #15181f;
+  --text-muted: #5b606b;
+  --text-dim: #8b919c;
+  --accent: #2d3340;
 
-  --bar-prospects: #fcd8a7;
-  --bar-leads: #f59e3d;
-  --bar-customers: #7c2d12;
+  --bar-prospects: #d8dde5;
+  --bar-leads: #7c8ba6;
+  --bar-customers: #2d3340;
 
-  --tooltip-shadow: 0 8px 24px rgba(120, 50, 10, 0.15);
-  --thumb-shadow: 0 1px 3px rgba(120, 50, 10, 0.25);
-  --row-highlight: rgba(120, 50, 10, 0.05);
+  --tooltip-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  --thumb-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  --row-highlight: rgba(15, 23, 42, 0.035);
 }
 
 html, body {
